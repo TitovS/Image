@@ -9,6 +9,8 @@
 
 
     struct BITMAPFILEHEADER
+
+#pragma pack(push,1)
     {
         unsigned short Type;     // ‘BM’ 0x4D42
         unsigned long  Size;     // Размер файла в байтах, BitCount*Height*Width+ OffsetBits
@@ -17,6 +19,7 @@
         unsigned long  OffsetBits;   // Смещение данных от начала файла в байтах
 
     };
+#pragma pack(pop)
 
     struct RGBTRIPLE
     {
@@ -48,19 +51,23 @@ class Img {
 
     public:
 
-        Img( unsigned short BCount, int Width, int Height, unsigned char Mode);
+    Img( unsigned short BCount, int Width, int Height, unsigned char Mode);
 
-        Img(char const *fileName);                     // Конструктор объекта изображения из файла
+    Img(char const *fileName);                     // Конструктор объекта изображения из файла
 
-        Img ();       // Конструктор без параметров, создает пустой контейнер под изображение
+    Img ();       // Конструктор без параметров, создает пустой контейнер под изображение
 
-        Img (const Img &i);      // Конструктор копии
+    Img& operator = (const Img&);
 
-        ~Img ();                   // Деструктор
+    Img (const Img &i);      // Конструктор копии
 
-        int loadimage(char *fileName);   // метод загрузки изображения аналогичный конструктору
+    ~Img ();                   // Деструктор
 
-        void writeimage(char *fileName); // метод записи изображения в файл
+    int loadimage(char *fileName);   // метод загрузки изображения аналогичный конструктору
+
+    void writeimage(char *fileName, Img image); // метод записи изображения в файл
+
+
     };
 
 

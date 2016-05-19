@@ -3,6 +3,8 @@
 //
 
 #include "Img.h"
+#include <stdio.h>
+#include "string.h"
 
 
 Img::Img(unsigned short BCount, int Width, int Height, unsigned char Mode) {
@@ -40,3 +42,120 @@ Img::Img(unsigned short BCount, int Width, int Height, unsigned char Mode) {
     }
 
 }
+
+Img::Img(char const *fileName){
+
+    BITMAPFILEHEADER BMFileHeader;
+
+    FILE *f;
+
+    char const *pchar = fileName;
+
+    f = fopen(pchar,"rb");
+
+    fread(&BMFileHeader,sizeof(BITMAPFILEHEADER),1,f);
+
+    fseek(f, BMFileHeader.OffsetBits, SEEK_SET);
+
+    fread(&BMInfoHeader,sizeof(BMInfoHeader),1,f);
+
+
+    if (BMInfoHeader.BitCount == 24) {
+
+        Rgbtriple = new RGBTRIPLE[BMInfoHeader.Height * BMInfoHeader.Width];
+        fseek(f, BMInfoHeader.Size+BMFileHeader.OffsetBits, SEEK_SET);
+        fread(Rgbtriple, BMInfoHeader.SizeImage, 1, f);
+
+    }
+
+
+}
+
+
+Img::Img(void) {
+
+    BMInfoHeader.Size = NULL;           // Число байтов необходимое для структуры = 40
+    BMInfoHeader.Width = NULL;          // Ширина точечного рисунка в пикселях
+    BMInfoHeader.Height = NULL;         // Высота точечного рисунка в пикселях
+    BMInfoHeader.Planes = NULL;         // Число плоскостей целевого устройства = 1
+    BMInfoHeader.BitCount = NULL;       // Глубина цвета, число бит на точку = 0,1,4,8,16,24,32
+    BMInfoHeader.Compression = NULL;    // Тип сжатия = 0 для несжатого изображения
+    BMInfoHeader.SizeImage = NULL;      // Размер изображения в байтах BitCount*Height*Width
+    BMInfoHeader.XPelsPerMeter = NULL;  // Разрешающая способность по горизонтали
+    BMInfoHeader.YPelsPerMeter = NULL;  // Разрешающая способность по вертикали
+    BMInfoHeader.ColorUsed = NULL;      // Число индексов используемых цветов. Если все цвета = 0
+    BMInfoHeader.ColorImportant = NULL; // Число необходимых цветов = 0
+
+
+}
+
+Img::~Img (){
+
+    delete[] Rgbtriple;
+
+};
+
+
+
+Img::Img(const Img &i) {
+
+
+    Img(i.BMInfoHeader.BitCount,i.BMInfoHeader.Width,i.BMInfoHeader.Height,'b');
+    memcpy(Rgbtriple,i.Rgbtriple,BMInfoHeader.SizeImage);
+
+
+}
+
+
+Img& Img::operator=(const Img& Inp) {
+
+    if (this == &Inp)
+        return (*this);
+
+
+    BMInfoHeader.Width = Inp.BMInfoHeader.Width;
+    BMInfoHeader.Height = Inp.BMInfoHeader.Height;
+    BMInfoHeader.BitCount = Inp.BMInfoHeader.BitCount;
+    BMInfoHeader.SizeImage = Inp.BMInfoHeader.SizeImage;
+
+    memcpy(Rgbtriple,Inp.Rgbtriple,BMInfoHeader.SizeImage);
+
+    return (*this);
+
+}
+
+
+void Img::writeimage(char *fileName, Img image) {
+
+
+    FILE * pFile;
+    pFile = fopen (fileName, "rb");
+
+    BITMAPFILEHEADER BMFileHeader;
+
+    BMFileHeader.Type = 'BM';     // ‘BM’ 0x4D42
+    BMFileHeader.Size = image.BMInfoHeader.BitCount*image.BMInfoHeader.Width*image.BMInfoHeader.Height;     // Размер файла в байтах, BitCount*Height*Width+ OffsetBits
+    BMFileHeader.Reserved1 = 0;    // Зарезервирован; должен быть нуль
+    BMFileHeader.Reserved2 = 54;    // Зарезервирован; должен быть нуль
+    BMFileHeader.OffsetBits = 2621440;   // Смещение данных от начала файла в байтах
+
+
+    fwrite (&BMFileHeader , sizeof(BITMAPFILEHEADER), 1, pFile);
+
+    fseek(pFile, BMFileHeader.OffsetBits, SEEK_SET);
+
+    fwrite(&BMInfoHeader,sizeof(BMInfoHeader),1,pFile);
+
+
+    fseek(pFile, BMInfoHeader.Size+BMFileHeader.OffsetBits, SEEK_SET);
+    fwrite(Rgbtriple, BMInfoHeader.SizeImage, 1, pFile);
+
+
+    fclose (pFile);
+
+}
+int Img::loadimage(char *fileName){
+
+
+
+};
